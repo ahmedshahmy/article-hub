@@ -36,6 +36,13 @@
                     <button type="submit">Save Article</button>
                 </form>
             </div>
+            
+            <div class="articles-container" id="articlesContainer">
+                <h2>Saved Articles</h2>
+                <div id="articlesList">
+                    <!-- Articles will be displayed here -->
+                </div>
+            </div>
         </main>
         
         <script src="assets/script.js"></script>
@@ -102,7 +109,72 @@
                 // Reset form
                 document.getElementById('articleForm').reset();
                 imagePreview.style.display = 'none';
+                
+                // Refresh articles list
+                loadArticles();
             }
+            
+            // Load and display articles
+            function loadArticles() {
+                const articles = JSON.parse(localStorage.getItem('articles')) || [];
+                const articlesList = document.getElementById('articlesList');
+                
+                if (articles.length === 0) {
+                    articlesList.innerHTML = '<div class="no-articles">No articles saved yet.</div>';
+                    return;
+                }
+                
+                let articlesHTML = '';
+                
+                // Sort articles by date (newest first)
+                articles.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                articles.forEach(article => {
+                    const date = new Date(article.date);
+                    const formattedDate = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    articlesHTML += `
+                        <div class="article-card">
+                            <h3 class="article-title">${article.title}</h3>
+                            ${article.image ? `<img src="${article.image}" alt="${article.title}" class="article-image">` : ''}
+                            <div class="article-content">${article.content}</div>
+                            <div class="article-meta">
+                                <span>Published on ${formattedDate}</span>
+                                <button class="delete-btn" data-id="${article.id}">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                articlesList.innerHTML = articlesHTML;
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const articleId = this.getAttribute('data-id');
+                        deleteArticle(articleId);
+                    });
+                });
+            }
+            
+            // Delete article
+            function deleteArticle(articleId) {
+                if (confirm('Are you sure you want to delete this article?')) {
+                    let articles = JSON.parse(localStorage.getItem('articles')) || [];
+                    articles = articles.filter(article => article.id != articleId);
+                    localStorage.setItem('articles', JSON.stringify(articles));
+                    loadArticles();
+                }
+            }
+            
+            // Load articles on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                loadArticles();
+            });
         </script>
     </div>
 </body>
