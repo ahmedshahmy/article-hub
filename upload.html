@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Article</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Article Hub</h1>
+            <p>Upload Articles</p>
+        </header>
+        
+        <main>
+            <div class="form-section">
+                <h2>Create New Article</h2>
+                <form id="articleForm">
+                    <div class="form-group">
+                        <label for="articleTitle">Article Title</label>
+                        <input type="text" id="articleTitle" name="title" required placeholder="Enter article title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="articleContent">Content</label>
+                        <textarea id="articleContent" name="content" required placeholder="Write your article content here..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="articleImage">Article Image</label>
+                        <input type="file" id="articleImage" name="image" accept="image/*" required>
+                        <img id="imagePreview" class="image-preview" alt="Image preview">
+                    </div>
+                    
+                    <button type="submit">Save Article</button>
+                </form>
+            </div>
+        </main>
+        
+        <script src="assets/script.js"></script>
+        <script>
+            // Setup image preview functionality
+            const articleImage = document.getElementById('articleImage');
+            const imagePreview = document.getElementById('imagePreview');
+            
+            articleImage.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+            });
+            
+            // Handle form submission
+            document.getElementById('articleForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const article = {
+                    id: Date.now(),
+                    title: formData.get('title'),
+                    content: formData.get('content'),
+                    image: null,
+                    date: new Date().toISOString()
+                };
+                
+                // Handle image upload
+                const imageFile = formData.get('image');
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        article.image = e.target.result;
+                        saveArticle(article);
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    saveArticle(article);
+                }
+            });
+            
+            function saveArticle(article) {
+                // Get existing articles
+                let articles = JSON.parse(localStorage.getItem('articles')) || [];
+                
+                // Add new article
+                articles.push(article);
+                
+                // Save back to localStorage
+                localStorage.setItem('articles', JSON.stringify(articles));
+                
+                // Show success message
+                alert('Article saved successfully!');
+                
+                // Reset form
+                document.getElementById('articleForm').reset();
+                imagePreview.style.display = 'none';
+            }
+        </script>
+    </div>
+</body>
+</html>

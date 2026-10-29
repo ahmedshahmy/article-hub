@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Articles</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Article Hub</h1>
+            <p>View Articles by Month</p>
+        </header>
+        
+        <main>
+            <div class="month-selector">
+                <h2>Filter by Month</h2>
+                <select id="monthFilter">
+                    <option value="all">All Articles</option>
+                </select>
+            </div>
+            
+            <div class="articles-container" id="articlesContainer">
+                <div id="articlesList">
+                    <!-- Articles will be displayed here -->
+                </div>
+            </div>
+        </main>
+        
+        <script src="assets/script.js"></script>
+        <script>
+            // Load and display articles
+            document.addEventListener('DOMContentLoaded', function() {
+                loadArticles();
+                populateMonthFilter();
+            });
+            
+            // Populate month filter dropdown
+            function populateMonthFilter() {
+                const select = document.getElementById('monthFilter');
+                
+                // Get all unique months from articles
+                let months = [];
+                const articles = JSON.parse(localStorage.getItem('articles')) || [];
+                
+                articles.forEach(article => {
+                    const date = new Date(article.date);
+                    const monthYear = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    
+                    if (!months.includes(monthYear)) {
+                        months.push(monthYear);
+                    }
+                });
+                
+                // Sort months in reverse chronological order
+                months.sort((a, b) => {
+                    const dateA = new Date(a);
+                    const dateB = new Date(b);
+                    return dateB - dateA;
+                });
+                
+                // Add options to select
+                months.forEach(month => {
+                    const option = document.createElement('option');
+                    option.value = month;
+                    option.textContent = month;
+                    select.appendChild(option);
+                });
+                
+                // Add event listener to filter
+                select.addEventListener('change', function() {
+                    loadArticles(this.value);
+                });
+            };
+            
+            // Load and display articles
+            function loadArticles(filterMonth = 'all') {
+                const articles = JSON.parse(localStorage.getItem('articles')) || [];
+                const articlesList = document.getElementById('articlesList');
+                
+                // Filter articles if month is selected
+                let filteredArticles = articles;
+                if (filterMonth !== 'all') {
+                    filteredArticles = articles.filter(article => {
+                        const articleDate = new Date(article.date);
+                        const articleMonthYear = articleDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                        return articleMonthYear === filterMonth;
+                    });
+                }
+                
+                // Sort articles by date (newest first)
+                filteredArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                if (filteredArticles.length === 0) {
+                    articlesList.innerHTML = '<div class="no-articles">No articles found.</div>';
+                    return;
+                }
+                
+                let articlesHTML = '';
+                
+                filteredArticles.forEach(article => {
+                    const date = new Date(article.date);
+                    const formattedDate = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    articlesHTML += `
+                        <div class="article-card">
+                            <h3 class="article-title">${article.title}</h3>
+                            ${article.image ? `<img src="${article.image}" alt="${article.title}" class="article-image">` : ''}
+                            <div class="article-content">${article.content}</div>
+                            <div class="article-meta">
+                                <span>Published on ${formattedDate}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                articlesList.innerHTML = articlesHTML;
+            }
+        </script>
+    </div>
+</body>
+</html>
